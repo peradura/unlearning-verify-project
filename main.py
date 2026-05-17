@@ -1,98 +1,88 @@
-# from upload.del_datasets.manager import UnlearningDatasetManager
+import torch
 
-# def main():
-    
-#     manager = UnlearningDatasetManager()
-#     result = manager.register(
-#         dataset="example",
-#         name="Example Dataset",
-#         version="1.0"
-#     )
-
-# if __name__ == "__main__":
-#     main()
-
-
-import os
-from datetime import datetime
 from upload.del_datasets.manager import UnlearningDatasetManager
-from upload.del_datasets.validator import DatasetValidator
+from verify.l2_distance_evaluation import calculate_metrics
+from verify.mia_evaluation import run_evaluation
 
-def main():
-    print("🚀 Unlearning Dataset Manager 테스트 시작...")
-    
-    # 2. 매니저 초기화 
-    # 프로젝트 루트에 test_output 폴더를 만들어 데이터를 깔끔하게 관리하도록 경로 설정
-    registry_path = 'upload/del_datasets/saved/test_registry.json'
-    output_dir = 'upload/del_datasets/saved/test_datasets'
-    
-    manager = UnlearningDatasetManager(
-        registry_path=registry_path, 
-        output_dir=output_dir
+# 1. MIA 평가에 필요한 인자들을 담은 설정 클래스 정의
+class MIAConfig:
+    def __init__(self, model_path, forget_data, nonmember_data, output_path="mia_results.json"):
+        self.model_path = model_path
+        self.forget_data = forget_data
+        self.nonmember_data = nonmember_data
+        self.max_samples = 500
+        self.max_length = 512
+        self.batch_size = 4
+        self.method = "both"
+        self.k = 0.2
+        self.output = output_path
+
+def main():    
+    # dataset 검증 / 등록
+    manager = UnlearningDatasetManager()
+    result = manager.register(
+        dataset="example",
+        name="Example Dataset",
+        version="1.0"
     )
+    
+    # 경로 수정 필요
+    forget_dataset_path = result.get("forget_path", "path/to/forget_set.jsonl")
+    nonmember_dataset_path = result.get("nonmember_path", "path/to/non_member_set.jsonl")
+    
+    # 평가 대상이 되는 Unlearned 모델 경로, 경로 수정 필요
+    target_model_path = "/path/to/your/unlearned_model"
+    
+    # l2 distance 평가
+    config_data = "bert-base-uncased"  # 본인의 모델에 맞게 변경하세요.
+    
+    # 2. 오리지널 모델과 변경(언러닝) 모델의 가중치 파일(.pt 또는 .bin) 경로
+    orig_weights_path = "./weights/original_model.pt"
+    unlearn_weights_path = "./weights/unlearned_model.pt"
+    
+    # 3. 디바이스 설정 (CUDA 사용이 불가능하면 cpu로 변경)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+    
+    # 가상의 데이터셋과 토크나이저는 현재 함수 내부에서 주석 처리되어 있으므로, 
+    # None으로 넘겨주어도 정상 작동
+    unlearn_dataset = None
+    tokenizer = None
 
-    # ------------------------------------------------------------
-    # Case 1: 모든 검증 조건을 만족하는 정상 데이터셋
-    # ------------------------------------------------------------
-    print("\n[테스트 1] 정상 데이터셋 등록 시도")
-    success_dataset = [
-        {"id": f"f_{i:03d}", "text": f"Target forget sample text {i}", "label": "forget"} 
-        for i in range(5)
-    ] + [
-        {"id": f"r_{i:03d}", "text": f"General retain knowledge text {i}", "label": "retain"} 
-        for i in range(12)
-    ]
-
-    res1 = manager.register(
-        success_dataset, 
-        name="Toy Unlearning Spec", 
-        version="1.0", 
-        description="정상 작동 확인용 토이 데이터셋"
+    print("레이어별 가중치 L2 Distance 계산 시작...")
+    try:
+        # 함수 호출
+        weight_l2_distances = calculate_metrics(
+            config_data=config_data,
+            orig_weights=orig_weights_path,
+            unlearn_weights=unlearn_weights_path,
+            unlearn_dataset=unlearn_dataset,
+            tokenizer=tokenizer,
+            device=device
+        )
+        
+        # 결과 출력 (상위 10개 레이어만 예시로 출력)
+        print("\n=== 계산 완료 (Normalized L2 Distance) ===")
+        for i, (layer_name, dist) in enumerate(weight_l2_distances.items()):
+            print(f"{layer_name}: {dist:.6f}")
+            if i >= 15: # 너무 많으면 끊어서 보기
+                print("...")
+                break
+                
+    except Exception as e:
+        print(f"실행 중 오류가 발생했습니다: {e}")
+    
+    # MIA 평가
+    mia_config = MIAConfig(
+        model_path=target_model_path,
+        forget_data=forget_dataset_path,
+        nonmember_data=nonmember_dataset_path,
+        output_path="mia_results.json"
     )
-
-    # ------------------------------------------------------------
-    # Case 2: 경고(Warning)가 발생하는 데이터셋 
-    # (총 개수 10개는 채웠으나 retain < forget 관계 및 공백 텍스트 포함)
-    # ------------------------------------------------------------
-    print("\n[테스트 2] 경고(Warning) 발생 데이터셋 등록 시도")
-    warning_dataset = [
-        {"id": "w_01", "text": "Forget this core entity info", "label": "forget"},
-        {"id": "w_02", "text": "Forget this too", "label": "forget"},
-        {"id": "w_03", "text": "   ", "label": "forget"}, # ⚠️ 공백 텍스트 경고 유도
-        {"id": "w_04", "text": "General retain stream", "label": "retain"}, # ⚠️ retain(1) < forget(3) 경고 유도
-    ] + [
-        {"id": f"w_val_{i}", "text": f"Validation split anchor {i}", "label": "validation"} 
-        for i in range(7) # 총 11개로 최소 샘플 개수(10개)는 충족
-    ]
-
-    res2 = manager.register(warning_dataset, name="Warning Spec Test", version="1.0")
-
-    # ------------------------------------------------------------
-    # Case 3: 에러(Error)로 인해 등록이 완전히 실패하는 데이터셋
-    # ------------------------------------------------------------
-    print("\n[테스트 3] 에러(Error) 데이터셋 등록 시도 (실패 예상)")
-    broken_dataset = [
-        {"id": "e_01", "text": "Valid retain but...", "label": "retain"},
-        {"id": "e_02", "label": "retain"}, # ❌ text 필드 누락 오류
-        {"id": "e_03", "text": "Invalid label mapping", "label": "wrong_label"}, # ❌ 정의되지 않은 라벨 오류
-    ] # ❌ 최소 샘플 수(10개) 미달, forget 샘플 0개 오류
-
-    res3 = manager.register(broken_dataset, name="Broken Spec Test", version="1.0")
-
-    # ------------------------------------------------------------
-    # Case 4: 등록된 데이터셋 파일 조회 및 로드 테스트
-    # ------------------------------------------------------------
-    print("\n[테스트 4] Registry 파일 연동 및 로드 테스트")
     
-    all_stored = manager.list_all()
-    print(f"📦 현재 Registry에 등록된 세션 수: {len(all_stored)}개")
-    
-    if res1['success']:
-        print("\n'Toy Unlearning Spec' 데이터셋을 다시 가져옵니다...")
-        loaded_data = manager.load("Toy Unlearning Spec", version="1.0")
-        if loaded_data:
-            print(f"✅ 파일 로드 성공! 총 로드된 샘플 수: {len(loaded_data)}개")
-            print(f"🔍 첫 번째 샘플 구조: {loaded_data[0]}")
+    # 주입된 설정을 바탕으로 MIA 평가 함수 실행
+    run_evaluation(mia_config)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+    

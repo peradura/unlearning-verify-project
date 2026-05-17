@@ -103,9 +103,10 @@ def load_data(path, max_samples=500):
 
     return texts
 
-def main():
-    args = parse_args()
-    
+def run_evaluation(args):
+    """
+    기존 main() 함수를 외부에서 args를 주입받을 수 있는 함수로 변경했습니다.
+    """
     model, tokenizer = load_model_and_tokenizer(args.model_path)
     
     # 데이터 로드
@@ -123,7 +124,7 @@ def main():
         non_loss = compute_loss(model, tokenizer, nonmember_texts, args.max_length)
         
         y_true = np.concatenate([np.ones(len(forget_loss)), np.zeros(len(non_loss))])
-        y_score = np.concatenate([-forget_loss, -non_loss])  # 낮은 loss = member (score 높게)
+        y_score = np.concatenate([-forget_loss, -non_loss])
         
         auc = roc_auc_score(y_true, y_score)
         fpr, tpr, thresholds = roc_curve(y_true, y_score)
@@ -143,9 +144,9 @@ def main():
         non_mink = compute_mink_prob(model, tokenizer, nonmember_texts, args.k, args.max_length)
         
         y_true = np.concatenate([np.ones(len(forget_mink)), np.zeros(len(non_mink))])
-        y_score = np.concatenate([forget_mink, non_mink])  # Min-K score가 낮을수록 member
+        y_score = np.concatenate([forget_mink, non_mink])
         
-        auc = roc_auc_score(y_true, -y_score)  # 낮을수록 member
+        auc = roc_auc_score(y_true, -y_score)
         results["mink"] = {"auc": float(auc), "k": args.k}
         print(f"Min-K% AUC: {auc:.4f}")
     
@@ -155,6 +156,3 @@ def main():
     
     print(f"\n결과 저장: {args.output}")
     print("→ AUC ≈ 0.5 이면 unlearning이 잘 된 것!")
-
-if __name__ == "__main__":
-    main()
