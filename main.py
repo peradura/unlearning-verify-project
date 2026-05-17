@@ -1,4 +1,4 @@
-from upload.del_datasets.manager import UnlearningDatasetManager
+from upload.unlearned_dataset.manager import UnlearningDatasetManager
 
 def main():
     

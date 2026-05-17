@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # --------------------------------------------------------
     # 🎯 [핵심 자동화] 업로드된 데이터셋을 그대로 불러와 전수 검사
     # --------------------------------------------------------
-    UPLOADED_DATASET_PATH = "./upload/del_datasets/dataset.json"  # 사용자가 올린 실제 데이터셋 경로
+    UPLOADED_DATASET_PATH = "./upload/unlearned_dataset/dataset.json"  # 사용자가 올린 실제 데이터셋 경로
 
     with open(UPLOADED_DATASET_PATH, "r", encoding="utf-8") as f:
         uploaded_delete_set = json.load(f)
