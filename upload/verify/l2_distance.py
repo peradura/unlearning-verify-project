@@ -36,20 +36,20 @@ def calculate_metrics(config_data, orig_weights, unlearn_weights, unlearn_datase
         norm_l2 = l2_dist / np.sqrt(w_orig.numel()) if w_orig.numel() > 0 else 0
         weight_l2_dict[key] = norm_l2
 
-    # ----------------------------------------------------
-    # [검증 2] 데이터셋 순전파 Activation 차이 계산
-    # ----------------------------------------------------
-    samples = [batch['text'] for batch in list(unlearn_dataset)[:num_samples]]
-    inputs = tokenizer(samples, return_tensors="pt", padding=True, truncation=True).to(device)
+    # # ----------------------------------------------------
+    # # [검증 2] 데이터셋 순전파 Activation 차이 계산
+    # # ----------------------------------------------------
+    # samples = [batch['text'] for batch in list(unlearn_dataset)[:num_samples]]
+    # inputs = tokenizer(samples, return_tensors="pt", padding=True, truncation=True).to(device)
     
-    with torch.no_grad():
-        outputs_orig = model_orig(**inputs, output_hidden_states=True)
-        outputs_unlearn = model_unlearn(**inputs, output_hidden_states=True)
+    # with torch.no_grad():
+    #     outputs_orig = model_orig(**inputs, output_hidden_states=True)
+    #     outputs_unlearn = model_unlearn(**inputs, output_hidden_states=True)
         
-        activation_distances = []
-        for h_orig, h_unlearn in zip(outputs_orig.hidden_states, outputs_unlearn.hidden_states):
-            dist = torch.norm(h_orig - h_unlearn, p=2, dim=-1).mean().item()
-            activation_distances.append(dist)
+    #     activation_distances = []
+    #     for h_orig, h_unlearn in zip(outputs_orig.hidden_states, outputs_unlearn.hidden_states):
+    #         dist = torch.norm(h_orig - h_unlearn, p=2, dim=-1).mean().item()
+    #         activation_distances.append(dist)
             
     del model_orig, model_unlearn
     torch.cuda.empty_cache()
