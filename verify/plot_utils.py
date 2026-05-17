@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 def plot_unified_verification(weight_metrics, activation_metrics, target_layer_keyword="layers.12", save_path=None):
     """ 두 검증 결과 데이터를 받아 하나의 피겨에 세로로 배치하여 시각화 """
     # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 10))
-    fig, (ax1, ax2) = plt.subplots(1, 1, figsize=(15, 10))
+    fig, ax1 = plt.subplots(1, 1, figsize=(15, 10))
     
     
     # 1. 상단 차트: 가중치 변화

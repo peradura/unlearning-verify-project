@@ -54,4 +54,5 @@ def calculate_metrics(config_data, orig_weights, unlearn_weights, unlearn_datase
     del model_orig, model_unlearn
     torch.cuda.empty_cache()
     
-    return weight_l2_dict, activation_distances
+    # return weight_l2_dict, activation_distances
+    return weight_l2_dict
