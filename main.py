@@ -1,21 +1,4 @@
-import torch
-
-from upload.del_datasets.manager import UnlearningDatasetManager
-from verify.l2_distance_evaluation import calculate_metrics
-from verify.mia_evaluation import run_evaluation
-
-# 1. MIA 평가에 필요한 인자들을 담은 설정 클래스 정의
-class MIAConfig:
-    def __init__(self, model_path, forget_data, nonmember_data, output_path="mia_results.json"):
-        self.model_path = model_path
-        self.forget_data = forget_data
-        self.nonmember_data = nonmember_data
-        self.max_samples = 500
-        self.max_length = 512
-        self.batch_size = 4
-        self.method = "both"
-        self.k = 0.2
-        self.output = output_path
+from upload.unlearned_dataset.manager import UnlearningDatasetManager
 
 def main():    
     # dataset 검증 / 등록
