@@ -1,58 +1,41 @@
 import torch
 import numpy as np
-from transformers import AutoConfig, AutoModelForCausalLM
 
-def _load_weights(path, device):
-    ckpt = torch.load(path, map_location=device)
-    return ckpt.get('model_state_dict', ckpt)
 
-def calculate_metrics(config_data, orig_weights, unlearn_weights, unlearn_dataset, tokenizer, device="cuda", num_samples: int=4):
+def run_layer_l1_normalized_experiment(model_orig, model_unlearn):
     """
-    1) 레이어별 가중치 L2 Distance 계산
-    2) 데이터셋 기반 순전파 Activation Distance 계산
+    [화이트박스] 레이어별 가중치 수치 실측 (정규화된 L1 Distance)
+    구조: 첫 번째 코드의 레이어 루프 구조 체택
+    수식: 두 번째 코드의 원소 수(numel) 기반 정규화 + L1(절대값 편차) 연산
     """
-    config = AutoConfig.from_dict(config_data) if isinstance(config_data, dict) else AutoConfig.from_pretrained(config_data)
-    
-    model_orig = AutoModelForCausalLM.from_config(config).to(device).eval()
-    model_unlearn = AutoModelForCausalLM.from_config(config).to(device).eval()
-    
-    sd_orig = _load_weights(orig_weights, device) if isinstance(orig_weights, str) else orig_weights
-    sd_unlearn = _load_weights(unlearn_weights, device) if isinstance(unlearn_weights, str) else unlearn_weights
-    
-    model_orig.load_state_dict(sd_orig, strict=False)
-    model_unlearn.load_state_dict(sd_unlearn, strict=False)
-    
-    # ----------------------------------------------------
-    # [검증 1] 가중치 L2 Distance 계산
-    # ----------------------------------------------------
-    weight_l2_dict = {}
-    for key in sd_orig.keys():
-        if key not in sd_unlearn or 'weight' not in key:
-            continue
-        w_orig = sd_orig[key].float()
-        w_unlearn = sd_unlearn[key].float()
-        
-        l2_dist = torch.norm(w_orig - w_unlearn, p=2).item()
-        norm_l2 = l2_dist / np.sqrt(w_orig.numel()) if w_orig.numel() > 0 else 0
-        weight_l2_dict[key] = norm_l2
+    print("\n" + "=" * 65)
+    print("🔬 [실험] 레이어별 가중치 행렬 Normalized L1 Distance 실측 결과")
+    print("=========================================================")
 
-    # # ----------------------------------------------------
-    # # [검증 2] 데이터셋 순전파 Activation 차이 계산
-    # # ----------------------------------------------------
-    # samples = [batch['text'] for batch in list(unlearn_dataset)[:num_samples]]
-    # inputs = tokenizer(samples, return_tensors="pt", padding=True, truncation=True).to(device)
-    
-    # with torch.no_grad():
-    #     outputs_orig = model_orig(**inputs, output_hidden_states=True)
-    #     outputs_unlearn = model_unlearn(**inputs, output_hidden_states=True)
-        
-    #     activation_distances = []
-    #     for h_orig, h_unlearn in zip(outputs_orig.hidden_states, outputs_unlearn.hidden_states):
-    #         dist = torch.norm(h_orig - h_unlearn, p=2, dim=-1).mean().item()
-    #         activation_distances.append(dist)
-            
-    del model_orig, model_unlearn
-    torch.cuda.empty_cache()
-    
-    # return weight_l2_dict, activation_distances
-    return weight_l2_dict
+    layers_orig = model_orig.model.layers
+    layers_unlearn = model_unlearn.model.layers
+
+    # 결과를 상위 파이프라인으로 넘겨줄 수 있도록 변수 수납고 세팅
+    layer_l1_results = {}
+
+    for i in range(len(layers_orig)):
+        # 1. 10번을 포함한 각 레이어의 Q-Projection 가중치 데이터 로드 (.float()로 정밀도 고정)
+        w_orig = layers_orig[i].self_attn.q_proj.weight.data.float()
+        w_unlearn = layers_unlearn[i].self_attn.q_proj.weight.data.float()
+
+        # 2. L1 Distance 계산 (p=1: 원소별 차이의 절대값 총합)
+        l1_dist = torch.norm(w_orig - w_unlearn, p=1).item()
+
+        # 3. L1 정규화 매커니즘 이식 (총 L1 거리를 가중치 원소 총 개수로 나눔)
+        # 💡 의미: "해당 레이어 가중치 소수점 자리 하나당 평균적으로 발생한 수치적 변동량"
+        num_elements = w_orig.numel()
+        norm_l1 = l1_dist / num_elements if num_elements > 0 else 0
+
+        # 변수 저장 및 터미널 모니터링 출력
+        layer_l1_results[f"layer_{i:02d}"] = norm_l1
+        print(f"   └ [Layer {i:02d}] Attention Q-Proj Normalized L1: {norm_l1:.6f}")
+
+    print("=========================================================")
+
+    # 다른 변수에 바로 바인딩할 수 있도록 딕셔너리 리턴
+    return layer_l1_results
