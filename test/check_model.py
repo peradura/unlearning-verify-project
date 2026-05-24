@@ -1,6 +1,8 @@
+import json
 import os
 import re
 import torch
+import torch.nn.functional as F
 from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 
 # 🧠 모델 레지스트리 (CPU 상주용)
@@ -97,6 +99,45 @@ def run_layer_l2_experiment():
         l2_dist = torch.norm(w_orig - w_unlearn, p=2).item()
         print(f"   └ [Layer {i:02d}] Attention Q-Projection L2 Distance: {l2_dist:.6f}")
 
+def compute_pure_kl_divergence(model_orig, model_unlearn, tokenizer, text_input):
+    """[핵심] 이미 로드된 두 모델의 출력 확률 분포 차이(KL)를 CPU에서 연산"""
+    inputs = tokenizer(text_input, return_tensors="pt").to("cpu")
+
+    with torch.no_grad():
+        outputs_orig = model_orig(**inputs)
+        outputs_unlearn = model_unlearn(**inputs)
+
+    logits_orig = outputs_orig.logits.float()
+    logits_unlearn = outputs_unlearn.logits.float()
+
+    prob_orig = F.softmax(logits_orig, dim=-1)
+    log_prob_unlearn = F.log_softmax(logits_unlearn, dim=-1)
+
+    kl_loss = F.kl_div(log_prob_unlearn, prob_orig, reduction='batchmean')
+    return kl_loss.item()
+
+def evaluate_dataset_kl(model_orig, model_unlearn, tokenizer, dataset_path, dataset_name="Target"):
+    """JSON 파일을 읽어서 전수 KL Divergence 평균을 내는 함수"""
+    if not os.path.exists(dataset_path):
+        print(f"⚠️ [{dataset_name}] 데이터 파일이 없습니다: {dataset_path} (스킵)")
+        return None
+
+    with open(dataset_path, "r", encoding="utf-8") as f:
+        dataset = json.load(f)
+
+    print(f"\n📈 [{dataset_name}] 총 {len(dataset)}개 샘플 KL 전수 검사 가동...")
+    kl_scores = []
+
+    for idx, sample in enumerate(dataset, 1):
+        combined_text = f"{sample['prompt'].strip()} {sample['response'].strip()}"
+        score = compute_pure_kl_divergence(model_orig, model_unlearn, tokenizer, combined_text)
+        kl_scores.append(score)
+
+        # 터미널 도배 방지 (20개 단위 혹은 마지막에만 출력)
+        if idx % 20 == 0 or idx == len(dataset):
+            print(f" └ [{dataset_name} 진행 {idx}/{len(dataset)}] 현재 실시간 평균 KL: {sum(kl_scores)/len(kl_scores):.6f}")
+
+    return sum(kl_scores) / len(kl_scores) if kl_scores else 0
 
 # =========================================================
 # 🚨 멈춤 방지용 메인 실행부 (여기가 꼭 있어야 터미널에 찍힙니다)
@@ -153,3 +194,25 @@ if __name__ == "__main__":
 
     else:
         print("\n❌ 모델 로딩 단계를 완수하지 못해 지표 추출 실험을 건너뜁니다.")
+
+print("\n" + "=" * 60)
+print("📊 [실험 3] 아까 추출해 둔 TOFU 로컬 데이터셋 교차 KL 검증")
+print("=" * 60)
+
+FORGET_DATA_PATH = "../dataset/forget10_data.json"  # ❌ 지운 타겟 10%
+RETAIN_DATA_PATH = "../dataset/retain90_data.json"  # 🛡️ 살려둔 상식 90%
+
+forget_avg_kl = evaluate_dataset_kl(model_orig, model_unlearn, tokenizer, FORGET_DATA_PATH, "Forget-10%")
+retain_avg_kl = evaluate_dataset_kl(model_orig, model_unlearn, tokenizer, RETAIN_DATA_PATH, "Retain-90%")
+
+# 최종 셧다운 레포트 출력
+print("\n" + "=" * 60)
+print("🏁 [최종 교차 분석 보고서 요약]")
+print("" + "=" * 60)
+if forget_avg_kl is not None:
+    print(f"  ❌ Forget-10% 지식 파괴도 (평균 KL) : {forget_avg_kl:.6f}")
+if retain_avg_kl is not None:
+    print(f"  🛡️ Retain-90% 일반 성능 보존도 (평균 KL) : {retain_avg_kl:.6f}")
+print("-" * 60)
+print("🎉 모든 로컬 파이프라인 실험이 꼬임 없이 성공적으로 완료되었습니다!")
+print("=" * 60)

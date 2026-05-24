@@ -9,7 +9,7 @@ def load_and_save_tofu_datasets():
     print("========================================================")
 
     # 📁 데이터를 저장할 로컬 폴더 경로 설정 (없으면 자동으로 만듭니다)
-    output_dir = "./tofu_local_data"
+    output_dir = "dataset"
     os.makedirs(output_dir, exist_ok=True)
 
     # 1. ❌ 지워야 할 10% 타겟 데이터셋 로드
