@@ -560,15 +560,15 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
 
   <div class="dz" id="dzTokenizerData">
     <input type="file" id="fTokenizerData" accept=".json,.jsonl,.csv,.txt,.model">
-    <div class="dz-tag tc">tokenizer dataset</div>
+    <div class="dz-tag tc">retain dataset</div>
     <div class="dz-icon">
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
         <path d="M3 5.5h11M5.5 3v11M8.5 3v11M11.5 3v11M3 8.5h11M3 11.5h11" stroke="var(--muted)" stroke-width="1.2" stroke-linecap="round"/>
         <rect x="2.5" y="2.5" width="12" height="12" rx="1.5" stroke="var(--muted)" stroke-width="1.4" fill="none"/>
       </svg>
     </div>
-    <div class="dz-label">토크나이저 데이터셋</div>
-    <div class="dz-hint">클릭하거나 드래그<br>json · jsonl · csv · txt · model</div>
+    <div class="dz-label">Retain 데이터셋</div>
+    <div class="dz-hint">클릭하거나 드래그<br>json · jsonl · csv · txt</div>
     <div class="dz-fname" id="tokenizerDataName"></div>
   </div>
 
@@ -1385,11 +1385,29 @@ function reset() {
 
 function handleExport(type) {
   if (type === 'pdf') {
-    alert('PDF 리포트 생성 중...\n실제 구현 시 jsPDF 또는 서버 렌더링으로 연결됩니다.');
+    const style = document.createElement('style');
+    style.id = 'print-style';
+    style.textContent = `
+      @media print {
+        .sb, .hdr, .export-row { display: none !important; }
+        .app { display: block !important; }
+        .main { overflow: visible !important; }
+        #scr-report { display: block !important; padding: 20px !important; }
+        .screen:not(#scr-report) { display: none !important; }
+        body { background: white !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    window.print();
+    setTimeout(() => {
+      const s = document.getElementById('print-style');
+      if (s) s.remove();
+    }, 1000);
   } else {
     const data = {
-      verdict: 'PASS',
-      overall: 91,
+      verdict: S.report?.verdict || 'UNKNOWN',
+      overall: S.report?.overall_score || 0,
       files: {
         config: S.cfg?.name || null,
         unlearningDataset: S.unlearnData?.name || null,
@@ -1400,19 +1418,15 @@ function handleExport(type) {
         }
       },
       forgettingQuality: {
-        score: 88,
-        kl_forget: 3.42,
-        mia_rate: 51.3,
-        neuron_sim: 8.4,
-        grad_div: 4.71
+        kl_forget: S.report?.kl_divergence || null,
+        mia_rate: S.report?.mia_score || null,
+        l2_distance: S.report?.l2_distance || null
       },
       utilityPreservation: {
-        score: 94,
-        kl_retain: 0.031,
-        perplexity_delta: 1.6,
-        mmlu: 77.6,
-        gsm8k: 63.8,
-        hellaswag: 82.2
+        kl_retain: S.report?.retain_kl || null,
+        perplexity_delta: S.report?.ppl_delta || null,
+        ppl_before: S.report?.ppl_before || null,
+        ppl_after: S.report?.ppl_after || null
       }
     };
 
