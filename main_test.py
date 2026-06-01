@@ -56,8 +56,8 @@ async def verify(
 
     file_map = {
         "config.json": config,
-        "forget_set.jsonl": forget_set,
-        "retain_set.jsonl": retain_set,
+        "forget_set.json": forget_set,
+        "retain_set.json": retain_set,
         "before_weights.pt": before_weights,
         "after_weights.pt": after_weights,
     }
@@ -165,8 +165,8 @@ def run_verification(session_id: str, session_dir: str):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         log(f"디바이스: {device}")
 
-        forget_path = os.path.join(session_dir, "forget_set.jsonl")
-        retain_path = os.path.join(session_dir, "retain_set.jsonl")
+        forget_path = os.path.join(session_dir, "forget_set.json")
+        retain_path = os.path.join(session_dir, "retain_set.json")
 
         # forget set 로드
         with open(forget_path, "r") as f:
@@ -213,25 +213,14 @@ def run_verification(session_id: str, session_dir: str):
 
         kl_avg = sum(kl_scores) / len(kl_scores) if kl_scores else 0
         log(f"KL Divergence 완료: 평균 {kl_avg:.4f}")
-
-        # ③ L2 Distance
+# ③ L2 Distance
         log("Layer L2 Distance 계산 중...")
-        sd_before = load_file(f"{BEFORE_MODEL_DIR}/model.safetensors")
-        sd_after = load_file(f"{AFTER_MODEL_DIR}/model.safetensors")
+        from verify.l2_distance_evaluation import run_layer_l2_normalized_experiment
 
-        weight_l2 = {}
-        for key in sd_before.keys():
-            if key not in sd_after or 'weight' not in key:
-                continue
-            w_orig = sd_before[key].float()
-            w_unlearn = sd_after[key].float()
-            l2_dist = torch.norm(w_orig - w_unlearn, p=2).item()
-            norm_l2 = l2_dist / np.sqrt(w_orig.numel()) if w_orig.numel() > 0 else 0
-            weight_l2[key] = norm_l2
-
-        top_layers = sorted(weight_l2.items(), key=lambda x: x[1], reverse=True)[:5]
+        layer_l2_results = run_layer_l2_normalized_experiment(model_before, model_after)
+        top_layers = sorted(layer_l2_results.items(), key=lambda x: x[1], reverse=True)[:5]
         max_l2 = top_layers[0][1] if top_layers else 0
-        log(f"L2 Distance 완료: 최대 {max_l2:.4f}")
+        log(f"L2 Distance 완료: 최대 {max_l2:.6f} ({top_layers[0][0] if top_layers else 'N/A'})")
 
         # ④ MIA
         log("MIA 평가 중...")

@@ -76,30 +76,28 @@ def compute_mink_prob(model, tokenizer, texts, k=0.2, max_length=512):
     return np.array(scores)
 
 def load_data(path, max_samples=500):
-    """
-    [BUG FIX]
-    원본: data = [json.loads(line) if ... else json.load(f)]
-      → .jsonl의 경우 'line' 변수가 정의되지 않아 NameError 발생
-      → .json의 경우 전체 데이터를 리스트로 한 번 더 감싸 1개만 읽힘
-    수정: jsonl은 모든 라인을 순회, json은 감싸지 않고 직접 load
-    """
     if path.endswith('.jsonl'):
         with open(path, 'r', encoding='utf-8') as f:
             data = [json.loads(line) for line in f if line.strip()]
-        texts = [item['text'] for item in data[:max_samples] if 'text' in item]
 
     elif path.endswith('.json'):
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        if isinstance(data, list):
-            texts = [item['text'] for item in data[:max_samples] if isinstance(item, dict) and 'text' in item]
-        else:
-            texts = [data['text']] if 'text' in data else []
-
+        if not isinstance(data, list):
+            data = [data]
     else:
-        # HuggingFace dataset
         ds = load_dataset(path, split='train')
-        texts = ds['text'][:max_samples] if 'text' in ds.column_names else ds[:max_samples]
+        data = [{'text': t} for t in ds['text'][:max_samples]] if 'text' in ds.column_names else []
+
+    # text / prompt+response 둘 다 지원
+    texts = []
+    for item in data[:max_samples]:
+        if 'text' in item:
+            texts.append(item['text'])
+        elif 'prompt' in item and 'response' in item:
+            texts.append(f"{item['prompt'].strip()} {item['response'].strip()}")
+        elif 'question' in item and 'answer' in item:
+            texts.append(f"{item['question'].strip()} {item['answer'].strip()}")
 
     return texts
 
