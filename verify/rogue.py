@@ -18,10 +18,12 @@ def parse_args():
 
 def load_model_only(model_path):
     print(f"🔄 Loading Model: {model_path}")
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    dtype = torch.float16 if torch.backends.mps.is_available() else torch.float32
+    
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
-        torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
-        device_map="auto" if torch.cuda.is_available() else None,
+        torch_dtype=dtype,
         low_cpu_mem_usage=True,
         trust_remote_code=True
     )

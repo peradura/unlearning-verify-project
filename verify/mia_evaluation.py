@@ -22,6 +22,8 @@ def parse_args():
     return parser.parse_args()
 
 def load_model_and_tokenizer(model_path):
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    dtype = torch.float16 if torch.backends.mps.is_available() else torch.float32
     print(f"Loading model: {model_path}")
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     if tokenizer.pad_token is None:

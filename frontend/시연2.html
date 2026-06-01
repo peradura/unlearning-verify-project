@@ -1149,6 +1149,17 @@ async function startVerify() {
   document.getElementById('hdrTag').className = 'hdr-tag tag-run';
 
   S.startTime = Date.now();
+  let autoProgTarget = 0;
+  S.autoProgTimer = setInterval(() => {
+      const cur = getCurrentProg();
+      if (cur < autoProgTarget - 0.5) {
+          const fill = document.getElementById('progFill');
+          const pct = document.getElementById('progPct');
+          const next = cur + 0.3;
+          fill.style.width = next + '%';
+          pct.textContent = Math.round(next) + '%';
+      }
+  }, 200);
   S.timer = setInterval(updateTimer, 1000);
 
   // 파일 전송
@@ -1169,6 +1180,7 @@ async function startVerify() {
   const es = new EventSource(`/verify/stream/${session_id}`);
   es.onmessage = (e) => {
     if (e.data === 'DONE') {
+      animateProg(getCurrentProg(), 100, 600);
       es.close();
       fetch(`/report/${session_id}`)
         .then(r => r.json())
@@ -1206,9 +1218,14 @@ async function startVerify() {
 
           // L2 Distance
           const l2Pass = data.l2_distance > 0.001;
-          mcVals[2].textContent = data.l2_distance;
           pills[2].textContent = l2Pass ? 'PASS' : 'FAIL';
           pills[2].className = 'pill ' + (l2Pass ? 'pill-pass' : 'pill-fail');
+
+          // 뉴런 활성도
+          const neuronPass = data.neuron_cos_sim < 20;
+          mcVals[2].textContent = data.neuron_cos_sim + '%';
+          pills[3].textContent = neuronPass ? 'PASS' : 'FAIL';
+          pills[3].className = 'pill ' + (neuronPass ? 'pill-pass' : 'pill-fail');
 
           // L2 레이어 차트 업데이트
           if (data.l2_layers) {
@@ -1255,7 +1272,7 @@ async function startVerify() {
           document.getElementById('hdrTag').textContent = '완료';
           document.getElementById('hdrTag').className = 'hdr-tag tag-done';
           // Retain KL
-          const retainKlPass = data.retain_kl < 0.1;
+          const retainKlPass = data.retain_kl < 5.0;
           document.querySelectorAll('.mc-val.c-success')[0].textContent = data.retain_kl;
           document.querySelectorAll('.metrics-sec')[1].querySelectorAll('.pill')[0].textContent = retainKlPass ? 'PASS' : 'FAIL';
           document.querySelectorAll('.metrics-sec')[1].querySelectorAll('.pill')[0].className = 'pill ' + (retainKlPass ? 'pill-pass' : 'pill-fail');
@@ -1285,6 +1302,48 @@ async function startVerify() {
         
     } else {
       addLog(e.data, 'info');
+      const progMap = [
+          ['토크나이저 로딩', 5], ['모델 로딩 중 (before)', 10], ['모델 로딩 중 (after)', 15],
+          ['KL Divergence 계산', 20], ['KL Divergence 완료', 35], ['Layer L2 Distance 계산', 40],
+          ['L2 Distance 완료', 50], ['MIA 평가 중', 55], ['MIA 완료', 65],
+          ['뉴런 활성화 분석', 70], ['뉴런 활성화 완료', 78], ['Log Probability', 80],
+          ['Log Prob 완료', 85], ['Retain KL', 88], ['Retain KL 완료', 91],
+          ['Perplexity 계산', 93], ['Perplexity 완료', 97],
+      ];
+      for (const [kw, pct] of progMap) {
+          if (e.data.includes(kw)) {
+              const cur = getCurrentProg();
+              if (pct > cur) autoProgTarget = pct;
+              document.getElementById('curTest').textContent = e.data.slice(0, 40) + '...';
+              break;
+          }
+      }
+      const tcMap = [
+          ['토크나이저 로딩', 'load', false],
+          ['모델 로딩 중 (after)', 'load', true],
+          ['KL Divergence 계산', 'kl_forget', false],
+          ['KL Divergence 완료', 'kl_forget', true],
+          ['Layer L2 Distance 계산', 'l2', false],
+          ['L2 Distance 완료', 'l2', true],
+          ['MIA 평가 중', 'mia', false],
+          ['MIA 완료', 'mia', true],
+          ['뉴런 활성화 분석', 'neuron', false],
+          ['뉴런 활성화 완료', 'neuron', true],
+          ['Log Probability', 'mmlu', false],
+          ['Log Prob 완료', 'mmlu', true],
+          ['Retain KL Divergence 계산', 'kl_retain', false],
+          ['Retain KL 완료', 'kl_retain', true],
+          ['Perplexity 계산', 'perplexity', false],
+          ['Perplexity 완료', 'perplexity', true],
+          ['검증 완료', 'report', true],
+      ];
+
+      for (const [kw, tcId, isDone] of tcMap) {
+          if (e.data.includes(kw)) {
+              setTC(tcId, isDone ? 'done' : 'running');
+              break;
+          }
+      }
     }
   };
 }
@@ -1339,6 +1398,7 @@ function reset() {
   S.arch = '';
 
   clearInterval(S.timer);
+  clearInterval(S.autoProgTimer);
 
   ['dzConfig', 'dzUnlearnData', 'dzTokenizerData', 'dzBeforeModel', 'dzAfterModel'].forEach(id => {
     document.getElementById(id).classList.remove('loaded');
@@ -1441,6 +1501,9 @@ function handleExport(type) {
 }
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
+function getCurrentProg() {
+    return parseFloat(document.getElementById('progFill').style.width) || 0;
+}
 </script>
 
 

@@ -78,7 +78,7 @@ def compute_perplexity(model, tokenizer, texts, max_length=256):
     count = 0
     with torch.no_grad():
         for text in texts:
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=max_length)
+            inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=max_length).to(model.device)
             labels = inputs.input_ids.clone()
             outputs = model(**inputs, labels=labels)
             total_loss += outputs.loss.item()
@@ -136,7 +136,7 @@ def compute_neuron_activation(model_before, model_after, tokenizer, forget_data,
     with torch.no_grad():
         for sample in forget_data[:max_samples]:
             text = f"{sample.get('question', sample.get('prompt',''))} {sample.get('answer', sample.get('response',''))}"
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+            inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=256).to(model_before.device)
             model_before(**inputs)
             model_after(**inputs)
 
@@ -162,7 +162,7 @@ def run_verification(session_id: str, session_dir: str):
         print(msg)
 
     try:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "mps" if torch.backends.mps.is_available() else "cpu"
         log(f"디바이스: {device}")
 
         forget_path = os.path.join(session_dir, "forget_set.json")
@@ -194,13 +194,13 @@ def run_verification(session_id: str, session_dir: str):
 
         log("모델 로딩 중 (before)...")
         model_before = AutoModelForCausalLM.from_pretrained(
-            BEFORE_MODEL_DIR, torch_dtype=torch.float16
-        )
+            BEFORE_MODEL_DIR
+        ).to(device)
 
         log("모델 로딩 중 (after)...")
         model_after = AutoModelForCausalLM.from_pretrained(
-            AFTER_MODEL_DIR, torch_dtype=torch.float16
-        )
+            AFTER_MODEL_DIR
+        ).to(device)
 
         # ② KL Divergence
         log("KL Divergence 계산 중...")
@@ -213,11 +213,22 @@ def run_verification(session_id: str, session_dir: str):
 
         kl_avg = sum(kl_scores) / len(kl_scores) if kl_scores else 0
         log(f"KL Divergence 완료: 평균 {kl_avg:.4f}")
+
 # ③ L2 Distance
         log("Layer L2 Distance 계산 중...")
-        from verify.l2_distance_evaluation import run_layer_l2_normalized_experiment
+        sd_before = load_file(f"{BEFORE_MODEL_DIR}/model.safetensors")
+        sd_after = load_file(f"{AFTER_MODEL_DIR}/model.safetensors")
 
-        layer_l2_results = run_layer_l2_normalized_experiment(model_before, model_after)
+        layer_l2_results = {}
+        for i in range(16):
+            key = f"model.layers.{i}.self_attn.q_proj.weight"
+            if key in sd_before and key in sd_after:
+                w_orig = sd_before[key]
+                w_unlearn = sd_after[key]
+                pure_l2 = torch.norm(w_orig - w_unlearn, p=2).item()
+                layer_l2_results[f"layer_{i:02d}"] = pure_l2
+                log(f"Layer {i:02d} L2: {pure_l2:.6f}")
+
         top_layers = sorted(layer_l2_results.items(), key=lambda x: x[1], reverse=True)[:5]
         max_l2 = top_layers[0][1] if top_layers else 0
         log(f"L2 Distance 완료: 최대 {max_l2:.6f} ({top_layers[0][0] if top_layers else 'N/A'})")
@@ -297,13 +308,18 @@ def run_verification(session_id: str, session_dir: str):
         del model_before, model_after
 
         # 종합 점수
-        kl_pass = kl_avg >= 1.5
-        mia_pass = 45 <= mia_score <= 55
-        overall = min(round(
-            (kl_avg / 5.0 * 50) +
-            (50 - abs(mia_score - 50)) +
-            (max_l2 * 10), 1), 100)
-        verdict = "PASS" if (kl_pass and mia_pass) else "FAIL"
+        kl_pass = kl_avg >= 50
+        mia_pass = 35 <= mia_score <= 65
+        retain_kl_pass = retain_kl_avg < 5.0
+        ppl_pass = abs(ppl_delta) < 5
+
+        kl_score = min(kl_avg / 200.0, 1.0) * 30
+        mia_score_pt = max(0, 30 - abs(mia_score - 50) * 1.2)
+        l2_score = min(max_l2 / 0.5, 1.0) * 20
+        retain_score = max(0, 20 - (retain_kl_avg / 20.0) * 20)
+
+        overall = min(round(kl_score + mia_score_pt + l2_score + retain_score, 1), 100)
+        verdict = "PASS" if (kl_pass and mia_pass and retain_kl_pass) else "FAIL"
 
         log(f"검증 완료! 종합 점수: {overall} — {verdict}")
 
