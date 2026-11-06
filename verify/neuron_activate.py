@@ -48,8 +48,8 @@ def load_model_cpu(source_folder, target_type="original"):
 
 
 if __name__ == "__main__":
-    PATH_ORIGINAL = "../test/model_check/test_orig"
-    PATH_UNLEARNED = "../test/model_check/test_unlearn"
+    PATH_ORIGINAL = "../models/before"
+    PATH_UNLEARNED = "../models/after"
 
     print("🔄 아키텍처 자동 분석형 뉴런 스캐너 가동...")
     if load_model_cpu(PATH_ORIGINAL, target_type="original") and load_model_cpu(PATH_UNLEARNED,
