@@ -1,7 +1,8 @@
 import os
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoModelForCausalLM, AutoTokenizer, AdamW
+from torch.optim import AdamW
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 
 # ===========================================================================

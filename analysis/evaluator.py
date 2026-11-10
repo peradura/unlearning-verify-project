@@ -145,11 +145,21 @@ def eval_mmlu(model, tokenizer, num_samples=500):
 # ---------------------------------------------------------------------------
 # 7. GSM8K 실측 평가 (텍스트 생성 & 숫자 매칭 200개 샘플)
 # ---------------------------------------------------------------------------
+def _normalize_number(s):
+    """'1,234.' / '20.00' / '42' 를 모두 같은 표준형으로 (문장 끝 마침표·천단위 콤마·소수점 0 제거)"""
+    s = s.replace(",", "").strip().rstrip(".")
+    try:
+        f = float(s)
+        return str(int(f)) if f == int(f) else str(f)
+    except ValueError:
+        return s
+
+
 def eval_gsm8k(model, tokenizer, num_samples=200):
     if model is None: return None
     print(f" -> [GSM8K Evaluation] Running {num_samples} samples...")
 
-    ds = load_dataset("gsm8k", "main", split="test")
+    ds = load_dataset("openai/gsm8k", "main", split="test")
     if num_samples and num_samples < len(ds):
         ds = ds.select(range(num_samples))  # 고정 슬라이싱 (순서 보장)
 
@@ -168,10 +178,10 @@ def eval_gsm8k(model, tokenizer, num_samples=200):
             generated_text = tokenizer.decode(output_ids[0][inputs.input_ids.size(1):], skip_special_tokens=True)
 
             target_match = re.search(r"####\s*(-?\d+[\d,.]*)", item['answer'])
-            target_num = target_match.group(1).replace(",", "") if target_match else ""
+            target_num = _normalize_number(target_match.group(1)) if target_match else ""
 
             pred_nums = re.findall(r"-?\d+[\d,.]*", generated_text)
-            pred_num = pred_nums[-1].replace(",", "") if pred_nums else ""
+            pred_num = _normalize_number(pred_nums[-1]) if pred_nums else ""
 
             if target_num and pred_num and target_num == pred_num:
                 correct += 1

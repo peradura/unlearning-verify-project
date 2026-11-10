@@ -5,7 +5,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
 
-from validator import DatasetValidator
+try:
+    from .validator import DatasetValidator
+except ImportError:  # 스크립트로 직접 실행할 때
+    from validator import DatasetValidator
 
 
 class UnlearningDatasetManager:

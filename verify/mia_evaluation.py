@@ -146,7 +146,7 @@ def run_evaluation(args):
         y_true = np.concatenate([np.ones(len(forget_mink)), np.zeros(len(non_mink))])
         y_score = np.concatenate([forget_mink, non_mink])
         
-        auc = roc_auc_score(y_true, -y_score)
+        auc = roc_auc_score(y_true, y_score)  # Min-K% log-prob는 클수록 member → 부호 반전 없음
         results["mink"] = {"auc": float(auc), "k": args.k}
         print(f"Min-K% AUC: {auc:.4f}")
     
