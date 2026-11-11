@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 import torch
 import numpy as np
 from datetime import datetime
@@ -20,20 +21,21 @@ from evaluator import (
 # 💡 [비교 평가 설정 구역] 내가 비교할 모델 1개만 아래 설정 후 바로 실행!
 # ===========================================================================
 # 1. 평가 대상 모델 식별 이름 (예: "3_graddiff_fp16", "5_graddiff_quant_4bit", "6_altpo_fp16" 등)
-TARGET_MODEL_NAME = "3_graddiff_fp16"
-
-# 2. 평가 대상 모델 경로 (HuggingFace Hub ID 또는 로컬 가중치 디렉토리)
-TARGET_MODEL_PATH = "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5"
-
-# 3. Target 모델의 4-bit 양자화 적용 여부 (True / False)
-IS_QUANTIZED = False
-
-# --- [고정 대조군 2종 (Base & Retain-only) 경로] ---
-BASE_MODEL_PATH = "open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10"
-RETAIN_MODEL_PATH = "open-unlearning/neg_tofu_Llama-3.2-1B-Instruct_retain90_forget10_pert_lr1e-05_wd0.01_epoch10"
-
-# 결과 저장 루트 디렉토리
-OUTPUT_DIR = "./eval_unlearned_results"
+_p = argparse.ArgumentParser(description="언러닝 변체 모델 평가 (Base / Retain-only 대비 상대 지표 포함)")
+_p.add_argument("--model_name", default="3_graddiff_fp16", help="결과 파일 식별 이름")
+_p.add_argument("--model_path", default="open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5",
+                help="HuggingFace Hub ID 또는 로컬 가중치 디렉토리")
+_p.add_argument("--quantized", action="store_true", help="Target 모델이 4-bit 양자화 체크포인트이면 지정")
+_p.add_argument("--base_path", default="open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10")
+_p.add_argument("--retain_path", default="open-unlearning/neg_tofu_Llama-3.2-1B-Instruct_retain90_forget10_pert_lr1e-05_wd0.01_epoch10")
+_p.add_argument("--output_dir", default="./eval_unlearned_results")
+_a = _p.parse_args()
+TARGET_MODEL_NAME = _a.model_name
+TARGET_MODEL_PATH = _a.model_path
+IS_QUANTIZED = _a.quantized
+BASE_MODEL_PATH = _a.base_path
+RETAIN_MODEL_PATH = _a.retain_path
+OUTPUT_DIR = _a.output_dir
 # ===========================================================================
 
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")

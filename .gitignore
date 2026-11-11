@@ -22,3 +22,7 @@ venv/
 *.pt
 *.bin
 *.safetensors
+
+# 로컬 생성 체크포인트
+checkpoints/
+**/checkpoints/

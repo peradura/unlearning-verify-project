@@ -1,4 +1,5 @@
 import os
+import argparse
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -10,13 +11,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 # - GradDiff: "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5"
 # - AltPO:    "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_AltPO_lr5e-05_beta0.1_alpha1_epoch10"
 # - NPO:      "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_NPO_lr2e-05_beta0.5_alpha1_epoch10"
-MODEL_PATH = "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5"
-
-# 2. 양자화 비트 선택 (4 또는 8)
-QUANT_BITS = 4
-
-# 3. 양자화된 가중치를 저장할 로컬 디렉토리 경로
-SAVE_DIR = "./checkpoints/5_graddiff_quant_4bit"
+_p = argparse.ArgumentParser(description="언러닝 모델 BitsAndBytes 양자화")
+_p.add_argument("--model_path", default="open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5")
+_p.add_argument("--save_dir", default="./checkpoints/5_graddiff_quant_4bit")
+_p.add_argument("--bits", type=int, choices=[4, 8], default=4)
+_a = _p.parse_args()
+MODEL_PATH = _a.model_path
+QUANT_BITS = _a.bits
+SAVE_DIR = _a.save_dir
 # ===========================================================================
 
 print(f"=======================================================")

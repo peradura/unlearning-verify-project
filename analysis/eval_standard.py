@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 import torch
 import numpy as np
 from datetime import datetime
@@ -17,9 +18,14 @@ from evaluator import (
 # 1.base - open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10
 # 2.retain only - open-unlearning/neg_tofu_Llama-3.2-1B-Instruct_retain90_forget10_pert_lr1e-05_wd0.01_epoch10
 # --- [Standard Model 평가 시] ---
-MODEL_NAME = "1_base"
-MODEL_PATH = "open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10"
-OUTPUT_DIR = "./eval_standard_results"
+_p = argparse.ArgumentParser(description="기준 모델(Base / Retain-only) 절대 지표 평가")
+_p.add_argument("--model_name", default="1_base", help="결과 파일 식별 이름 (예: 1_base, 2_retain_only)")
+_p.add_argument("--model_path", default="open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10")
+_p.add_argument("--output_dir", default="./eval_standard_results")
+_a = _p.parse_args()
+MODEL_NAME = _a.model_name
+MODEL_PATH = _a.model_path
+OUTPUT_DIR = _a.output_dir
 # ===========================================================================
 
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")

@@ -1,4 +1,5 @@
 import os
+import argparse
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -13,16 +14,20 @@ from datasets import load_dataset
 # - GradDiff: "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5"
 # - AltPO:    "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_AltPO_lr5e-05_beta0.1_alpha1_epoch10"
 # - NPO:      "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_NPO_lr2e-05_beta0.5_alpha1_epoch10"
-MODEL_PATH = "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5"
-
-# 2. 재학습 완료 후 가중치를 저장할 로컬 디렉토리 경로
-SAVE_DIR = "./checkpoints/4_graddiff_relearned_50"
-
-# 3. 재학습 하이퍼파라미터
-EPOCHS = 3
-LEARNING_RATE = 1e-5
-BATCH_SIZE = 4
-MAX_LENGTH = 512
+_p = argparse.ArgumentParser(description="언러닝 모델에 Forget 50% 재학습")
+_p.add_argument("--model_path", default="open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5")
+_p.add_argument("--save_dir", default="./checkpoints/4_graddiff_relearned_50")
+_p.add_argument("--epochs", type=int, default=3)
+_p.add_argument("--lr", type=float, default=1e-5)
+_p.add_argument("--batch_size", type=int, default=4)
+_p.add_argument("--max_length", type=int, default=512)
+_a = _p.parse_args()
+MODEL_PATH = _a.model_path
+SAVE_DIR = _a.save_dir
+EPOCHS = _a.epochs
+LEARNING_RATE = _a.lr
+BATCH_SIZE = _a.batch_size
+MAX_LENGTH = _a.max_length
 # ===========================================================================
 
 print(f"=======================================================")
@@ -45,7 +50,7 @@ if tokenizer.pad_token is None:
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
-    torch_dtype=torch.float16,
+    dtype=torch.bfloat16,   # fp16 순수 학습은 overflow/NaN 위험이 커서 bf16 사용
     device_map="auto"
 )
 
