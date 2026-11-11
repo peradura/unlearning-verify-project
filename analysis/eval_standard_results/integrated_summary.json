@@ -1,0 +1,29 @@
+{
+    "last_updated": "2026-11-11 12:41:56",
+    "models": {
+        "1_base": {
+            "model_path": "open-unlearning/pos_tofu_Llama-3.2-1B-Instruct_full_lr2e-05_wd0.01_epoch10",
+            "eval_timestamp": "2026-11-11 12:36:41",
+            "metrics": {
+                "mia_accuracy": 0.575,
+                "mean_neuron_activation": 0.11414794921875,
+                "forget_ppl": 7.007901041617988,
+                "forget_log_prob": -1.9470382327607023,
+                "mmlu_accuracy": 0.412,
+                "gsm8k_accuracy": 0.21
+            }
+        },
+        "2_retain_only": {
+            "model_path": "open-unlearning/neg_tofu_Llama-3.2-1B-Instruct_retain90_forget10_pert_lr1e-05_wd0.01_epoch10",
+            "eval_timestamp": "2026-11-11 12:41:56",
+            "metrics": {
+                "mia_accuracy": 0.41,
+                "mean_neuron_activation": 0.121319580078125,
+                "forget_ppl": 14.855384477737875,
+                "forget_log_prob": -2.6983623906219036,
+                "mmlu_accuracy": 0.41,
+                "gsm8k_accuracy": 0.21
+            }
+        }
+    }
+}

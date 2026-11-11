@@ -1,0 +1,158 @@
+{
+    "last_updated": "2026-11-11 13:04:07",
+    "models": {
+        "3_graddiff_fp16": {
+            "model_path": "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5",
+            "eval_timestamp": "2026-11-11 12:36:13",
+            "metrics": {
+                "mia_accuracy": 0.545,
+                "mean_neuron_activation": 0.1148651123046875,
+                "forget_ppl": 5.062104857797388,
+                "forget_log_prob": -1.6217823766056179,
+                "mmlu_accuracy": 0.404,
+                "gsm8k_accuracy": 0.24,
+                "l2_dist_vs_base": 11.114586076077686,
+                "retain_kl_vs_base": 11.9889453125,
+                "l2_dist_vs_retain": 9.963600547697638,
+                "retain_kl_vs_retain": 42.938046875,
+                "mia_gap_from_retain": 0.13500000000000006
+            }
+        },
+        "6_altpo_fp16": {
+            "model_path": "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_AltPO_lr5e-05_beta0.1_alpha1_epoch10",
+            "eval_timestamp": "2026-11-11 12:40:53",
+            "metrics": {
+                "mia_accuracy": 0.2425,
+                "mean_neuron_activation": 0.1205718994140625,
+                "forget_ppl": 44.498095471134064,
+                "forget_log_prob": -3.795446389854835,
+                "mmlu_accuracy": 0.408,
+                "gsm8k_accuracy": 0.2,
+                "l2_dist_vs_base": 12.281062377098323,
+                "retain_kl_vs_base": 26.90171875,
+                "l2_dist_vs_retain": 11.524631184967602,
+                "retain_kl_vs_retain": 54.630625,
+                "mia_gap_from_retain": 0.16749999999999998
+            }
+        },
+        "9_npo_fp16": {
+            "model_path": "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_NPO_lr2e-05_beta0.5_alpha1_epoch10",
+            "eval_timestamp": "2026-11-11 12:46:13",
+            "metrics": {
+                "mia_accuracy": 0.33,
+                "mean_neuron_activation": 0.1172637939453125,
+                "forget_ppl": 8.492624327771914,
+                "forget_log_prob": -2.139198060659533,
+                "mmlu_accuracy": 0.41,
+                "gsm8k_accuracy": 0.21,
+                "l2_dist_vs_base": 11.176663315599768,
+                "retain_kl_vs_base": 18.712421875,
+                "l2_dist_vs_retain": 10.068646153270265,
+                "retain_kl_vs_retain": 55.131875,
+                "mia_gap_from_retain": 0.07999999999999996
+            }
+        },
+        "4_graddiff_relearned_50": {
+            "model_path": "./checkpoints/4_graddiff_relearned_50",
+            "eval_timestamp": "2026-11-11 12:47:15",
+            "metrics": {
+                "mia_accuracy": 0.505,
+                "mean_neuron_activation": 0.1139892578125,
+                "forget_ppl": 3.088040399910074,
+                "forget_log_prob": -1.127536714949383,
+                "mmlu_accuracy": 0.412,
+                "gsm8k_accuracy": 0.265,
+                "l2_dist_vs_base": 11.721977020995334,
+                "retain_kl_vs_base": 61.909375,
+                "l2_dist_vs_retain": 10.826673025017685,
+                "retain_kl_vs_retain": 100.4190625,
+                "mia_gap_from_retain": 0.09500000000000003
+            }
+        },
+        "7_altpo_relearned_50": {
+            "model_path": "./checkpoints/7_altpo_relearned_50",
+            "eval_timestamp": "2026-11-11 12:51:14",
+            "metrics": {
+                "mia_accuracy": 0.26,
+                "mean_neuron_activation": 0.1206207275390625,
+                "forget_ppl": 11.643189000813745,
+                "forget_log_prob": -2.454721373922674,
+                "mmlu_accuracy": 0.436,
+                "gsm8k_accuracy": 0.22,
+                "l2_dist_vs_base": 12.993248905906935,
+                "retain_kl_vs_base": 50.35625,
+                "l2_dist_vs_retain": 12.50421008259601,
+                "retain_kl_vs_retain": 65.473125,
+                "mia_gap_from_retain": 0.14999999999999997
+            }
+        },
+        "5_graddiff_quant_4bit": {
+            "model_path": "./checkpoints/5_graddiff_quant_4bit",
+            "eval_timestamp": "2026-11-11 12:53:16",
+            "metrics": {
+                "mia_accuracy": 0.56,
+                "mean_neuron_activation": 0.1080810546875,
+                "forget_ppl": 5.689557361599795,
+                "forget_log_prob": -1.7386324527747887,
+                "mmlu_accuracy": 0.372,
+                "gsm8k_accuracy": 0.175,
+                "l2_dist_vs_base": -1.0,
+                "retain_kl_vs_base": 16.851247453689574,
+                "l2_dist_vs_retain": -1.0,
+                "retain_kl_vs_retain": 37.57022493362427,
+                "mia_gap_from_retain": 0.15000000000000008
+            }
+        },
+        "10_npo_relearned_50": {
+            "model_path": "./checkpoints/10_npo_relearned_50",
+            "eval_timestamp": "2026-11-11 12:54:47",
+            "metrics": {
+                "mia_accuracy": 0.2975,
+                "mean_neuron_activation": 0.118157958984375,
+                "forget_ppl": 4.705747509496691,
+                "forget_log_prob": -1.548784635975172,
+                "mmlu_accuracy": 0.414,
+                "gsm8k_accuracy": 0.21,
+                "l2_dist_vs_base": 11.792114899117268,
+                "retain_kl_vs_base": 56.251875,
+                "l2_dist_vs_retain": 10.957310215735792,
+                "retain_kl_vs_retain": 88.3125,
+                "mia_gap_from_retain": 0.11249999999999999
+            }
+        },
+        "8_altpo_quant_4bit": {
+            "model_path": "./checkpoints/8_altpo_quant_4bit",
+            "eval_timestamp": "2026-11-11 12:58:38",
+            "metrics": {
+                "mia_accuracy": 0.24,
+                "mean_neuron_activation": 0.1111083984375,
+                "forget_ppl": 38.603270894624465,
+                "forget_log_prob": -3.653337011083413,
+                "mmlu_accuracy": 0.366,
+                "gsm8k_accuracy": 0.18,
+                "l2_dist_vs_base": -1.0,
+                "retain_kl_vs_base": 31.266721458435057,
+                "l2_dist_vs_retain": -1.0,
+                "retain_kl_vs_retain": 51.25382587432861,
+                "mia_gap_from_retain": 0.16999999999999998
+            }
+        },
+        "11_npo_quant_4bit": {
+            "model_path": "./checkpoints/11_npo_quant_4bit",
+            "eval_timestamp": "2026-11-11 13:04:07",
+            "metrics": {
+                "mia_accuracy": 0.3225,
+                "mean_neuron_activation": 0.1091796875,
+                "forget_ppl": 9.699384225313382,
+                "forget_log_prob": -2.272062401567819,
+                "mmlu_accuracy": 0.366,
+                "gsm8k_accuracy": 0.17,
+                "l2_dist_vs_base": -1.0,
+                "retain_kl_vs_base": 22.77345329284668,
+                "l2_dist_vs_retain": -1.0,
+                "retain_kl_vs_retain": 47.65267816543579,
+                "mia_gap_from_retain": 0.08749999999999997
+            }
+        }
+    }
+}
