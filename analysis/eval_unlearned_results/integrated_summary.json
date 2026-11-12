@@ -1,12 +1,12 @@
 {
-    "last_updated": "2026-11-11 13:04:07",
+    "last_updated": "2026-11-12 18:03:59",
     "models": {
         "3_graddiff_fp16": {
             "model_path": "open-unlearning/unlearn_tofu_Llama-3.2-1B-Instruct_forget10_GradDiff_lr1e-05_alpha5_epoch5",
             "eval_timestamp": "2026-11-11 12:36:13",
             "metrics": {
                 "mia_accuracy": 0.545,
-                "mean_neuron_activation": 0.1148651123046875,
+                "mean_neuron_activation": 0.10006103515625,
                 "forget_ppl": 5.062104857797388,
                 "forget_log_prob": -1.6217823766056179,
                 "mmlu_accuracy": 0.404,
@@ -15,7 +15,8 @@
                 "retain_kl_vs_base": 11.9889453125,
                 "l2_dist_vs_retain": 9.963600547697638,
                 "retain_kl_vs_retain": 42.938046875,
-                "mia_gap_from_retain": 0.13500000000000006
+                "mia_gap_from_retain": 0.13500000000000006,
+                "neuron_layer_idx": 5
             }
         },
         "6_altpo_fp16": {
@@ -23,7 +24,7 @@
             "eval_timestamp": "2026-11-11 12:40:53",
             "metrics": {
                 "mia_accuracy": 0.2425,
-                "mean_neuron_activation": 0.1205718994140625,
+                "mean_neuron_activation": 0.1061767578125,
                 "forget_ppl": 44.498095471134064,
                 "forget_log_prob": -3.795446389854835,
                 "mmlu_accuracy": 0.408,
@@ -32,7 +33,8 @@
                 "retain_kl_vs_base": 26.90171875,
                 "l2_dist_vs_retain": 11.524631184967602,
                 "retain_kl_vs_retain": 54.630625,
-                "mia_gap_from_retain": 0.16749999999999998
+                "mia_gap_from_retain": 0.16749999999999998,
+                "neuron_layer_idx": 5
             }
         },
         "9_npo_fp16": {
@@ -40,7 +42,7 @@
             "eval_timestamp": "2026-11-11 12:46:13",
             "metrics": {
                 "mia_accuracy": 0.33,
-                "mean_neuron_activation": 0.1172637939453125,
+                "mean_neuron_activation": 0.101959228515625,
                 "forget_ppl": 8.492624327771914,
                 "forget_log_prob": -2.139198060659533,
                 "mmlu_accuracy": 0.41,
@@ -49,7 +51,8 @@
                 "retain_kl_vs_base": 18.712421875,
                 "l2_dist_vs_retain": 10.068646153270265,
                 "retain_kl_vs_retain": 55.131875,
-                "mia_gap_from_retain": 0.07999999999999996
+                "mia_gap_from_retain": 0.07999999999999996,
+                "neuron_layer_idx": 5
             }
         },
         "4_graddiff_relearned_50": {
@@ -57,7 +60,7 @@
             "eval_timestamp": "2026-11-11 12:47:15",
             "metrics": {
                 "mia_accuracy": 0.505,
-                "mean_neuron_activation": 0.1139892578125,
+                "mean_neuron_activation": 0.1000396728515625,
                 "forget_ppl": 3.088040399910074,
                 "forget_log_prob": -1.127536714949383,
                 "mmlu_accuracy": 0.412,
@@ -66,7 +69,8 @@
                 "retain_kl_vs_base": 61.909375,
                 "l2_dist_vs_retain": 10.826673025017685,
                 "retain_kl_vs_retain": 100.4190625,
-                "mia_gap_from_retain": 0.09500000000000003
+                "mia_gap_from_retain": 0.09500000000000003,
+                "neuron_layer_idx": 5
             }
         },
         "7_altpo_relearned_50": {
@@ -74,7 +78,7 @@
             "eval_timestamp": "2026-11-11 12:51:14",
             "metrics": {
                 "mia_accuracy": 0.26,
-                "mean_neuron_activation": 0.1206207275390625,
+                "mean_neuron_activation": 0.10748291015625,
                 "forget_ppl": 11.643189000813745,
                 "forget_log_prob": -2.454721373922674,
                 "mmlu_accuracy": 0.436,
@@ -83,7 +87,8 @@
                 "retain_kl_vs_base": 50.35625,
                 "l2_dist_vs_retain": 12.50421008259601,
                 "retain_kl_vs_retain": 65.473125,
-                "mia_gap_from_retain": 0.14999999999999997
+                "mia_gap_from_retain": 0.14999999999999997,
+                "neuron_layer_idx": 5
             }
         },
         "5_graddiff_quant_4bit": {
@@ -91,7 +96,7 @@
             "eval_timestamp": "2026-11-11 12:53:16",
             "metrics": {
                 "mia_accuracy": 0.56,
-                "mean_neuron_activation": 0.1080810546875,
+                "mean_neuron_activation": 0.090380859375,
                 "forget_ppl": 5.689557361599795,
                 "forget_log_prob": -1.7386324527747887,
                 "mmlu_accuracy": 0.372,
@@ -100,7 +105,8 @@
                 "retain_kl_vs_base": 16.851247453689574,
                 "l2_dist_vs_retain": -1.0,
                 "retain_kl_vs_retain": 37.57022493362427,
-                "mia_gap_from_retain": 0.15000000000000008
+                "mia_gap_from_retain": 0.15000000000000008,
+                "neuron_layer_idx": 5
             }
         },
         "10_npo_relearned_50": {
@@ -108,7 +114,7 @@
             "eval_timestamp": "2026-11-11 12:54:47",
             "metrics": {
                 "mia_accuracy": 0.2975,
-                "mean_neuron_activation": 0.118157958984375,
+                "mean_neuron_activation": 0.102825927734375,
                 "forget_ppl": 4.705747509496691,
                 "forget_log_prob": -1.548784635975172,
                 "mmlu_accuracy": 0.414,
@@ -117,7 +123,8 @@
                 "retain_kl_vs_base": 56.251875,
                 "l2_dist_vs_retain": 10.957310215735792,
                 "retain_kl_vs_retain": 88.3125,
-                "mia_gap_from_retain": 0.11249999999999999
+                "mia_gap_from_retain": 0.11249999999999999,
+                "neuron_layer_idx": 5
             }
         },
         "8_altpo_quant_4bit": {
@@ -125,7 +132,7 @@
             "eval_timestamp": "2026-11-11 12:58:38",
             "metrics": {
                 "mia_accuracy": 0.24,
-                "mean_neuron_activation": 0.1111083984375,
+                "mean_neuron_activation": 0.0943115234375,
                 "forget_ppl": 38.603270894624465,
                 "forget_log_prob": -3.653337011083413,
                 "mmlu_accuracy": 0.366,
@@ -134,7 +141,8 @@
                 "retain_kl_vs_base": 31.266721458435057,
                 "l2_dist_vs_retain": -1.0,
                 "retain_kl_vs_retain": 51.25382587432861,
-                "mia_gap_from_retain": 0.16999999999999998
+                "mia_gap_from_retain": 0.16999999999999998,
+                "neuron_layer_idx": 5
             }
         },
         "11_npo_quant_4bit": {
@@ -142,7 +150,7 @@
             "eval_timestamp": "2026-11-11 13:04:07",
             "metrics": {
                 "mia_accuracy": 0.3225,
-                "mean_neuron_activation": 0.1091796875,
+                "mean_neuron_activation": 0.0909423828125,
                 "forget_ppl": 9.699384225313382,
                 "forget_log_prob": -2.272062401567819,
                 "mmlu_accuracy": 0.366,
@@ -151,7 +159,62 @@
                 "retain_kl_vs_base": 22.77345329284668,
                 "l2_dist_vs_retain": -1.0,
                 "retain_kl_vs_retain": 47.65267816543579,
-                "mia_gap_from_retain": 0.08749999999999997
+                "mia_gap_from_retain": 0.08749999999999997,
+                "neuron_layer_idx": 5
+            }
+        },
+        "12_graddiff_relearned_20": {
+            "model_path": "./checkpoints/12_graddiff_relearned_20",
+            "eval_timestamp": "2026-11-12 17:56:48",
+            "metrics": {
+                "mia_accuracy": 0.4775,
+                "mean_neuron_activation": 0.0996734619140625,
+                "neuron_layer_idx": 5,
+                "forget_ppl": 3.5017972845540144,
+                "forget_log_prob": -1.2532763465668677,
+                "mmlu_accuracy": 0.418,
+                "gsm8k_accuracy": 0.24,
+                "l2_dist_vs_base": 11.402255411776213,
+                "retain_kl_vs_base": 48.42375,
+                "l2_dist_vs_retain": 10.391638283332622,
+                "retain_kl_vs_retain": 87.0228125,
+                "mia_gap_from_retain": 0.0675
+            }
+        },
+        "13_altpo_relearned_20": {
+            "model_path": "./checkpoints/13_altpo_relearned_20",
+            "eval_timestamp": "2026-11-12 18:00:38",
+            "metrics": {
+                "mia_accuracy": 0.22,
+                "mean_neuron_activation": 0.1064849853515625,
+                "neuron_layer_idx": 5,
+                "forget_ppl": 14.443316821411447,
+                "forget_log_prob": -2.670231803862061,
+                "mmlu_accuracy": 0.42,
+                "gsm8k_accuracy": 0.185,
+                "l2_dist_vs_base": 12.54606888771741,
+                "retain_kl_vs_base": 36.48171875,
+                "l2_dist_vs_retain": 11.910152736824696,
+                "retain_kl_vs_retain": 51.415,
+                "mia_gap_from_retain": 0.18999999999999997
+            }
+        },
+        "14_npo_relearned_20": {
+            "model_path": "./checkpoints/14_npo_relearned_20",
+            "eval_timestamp": "2026-11-12 18:03:59",
+            "metrics": {
+                "mia_accuracy": 0.2975,
+                "mean_neuron_activation": 0.102130126953125,
+                "neuron_layer_idx": 5,
+                "forget_ppl": 5.263732457584724,
+                "forget_log_prob": -1.6608403678044716,
+                "mmlu_accuracy": 0.414,
+                "gsm8k_accuracy": 0.255,
+                "l2_dist_vs_base": 11.440544898266683,
+                "retain_kl_vs_base": 39.3121875,
+                "l2_dist_vs_retain": 10.4709669413292,
+                "retain_kl_vs_retain": 69.4821875,
+                "mia_gap_from_retain": 0.11249999999999999
             }
         }
     }

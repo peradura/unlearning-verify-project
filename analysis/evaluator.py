@@ -45,17 +45,17 @@ def eval_l2_distance(model_a, model_b, is_quantized=False):
 
 
 # ---------------------------------------------------------------------------
-# 3. Neuron Activation (중간 레이어 평균 활성화 수치)
+# 3. Neuron Activation (지정 레이어 평균 활성화 수치)
 # ---------------------------------------------------------------------------
-def eval_neuron_activation(model, tokenizer, sample_texts, layer_idx=None):
+NEURON_LAYER_IDX = 5  # Llama-3.2-1B(16 layers) 기준 5번 레이어 (2026-11-12, 기존 8번에서 변경)
+
+
+def eval_neuron_activation(model, tokenizer, sample_texts, layer_idx=NEURON_LAYER_IDX):
     if model is None: return None
     activations = []
 
     def hook_fn(module, input, output):
         activations.append(output[0].abs().mean().item())
-
-    if layer_idx is None:
-        layer_idx = len(model.model.layers) // 2
 
     target_layer = model.model.layers[layer_idx]
     handle = target_layer.register_forward_hook(hook_fn)
@@ -66,7 +66,7 @@ def eval_neuron_activation(model, tokenizer, sample_texts, layer_idx=None):
             model(**inputs)
 
     handle.remove()
-    return {"mean_neuron_activation": float(np.mean(activations))}
+    return {"mean_neuron_activation": float(np.mean(activations)), "neuron_layer_idx": int(layer_idx)}
 
 
 # ---------------------------------------------------------------------------

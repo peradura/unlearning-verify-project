@@ -21,7 +21,11 @@ _p.add_argument("--epochs", type=int, default=3)
 _p.add_argument("--lr", type=float, default=1e-5)
 _p.add_argument("--batch_size", type=int, default=4)
 _p.add_argument("--max_length", type=int, default=512)
+_p.add_argument("--relearn_frac", type=float, default=0.5,
+                help="Forget 전체 중 재학습에 쓸 비율 (앞에서부터). 평가용 후반 50%%는 항상 제외되므로 0.5 이하여야 함")
 _a = _p.parse_args()
+RELEARN_FRAC = _a.relearn_frac
+assert 0 < RELEARN_FRAC <= 0.5, "relearn_frac는 평가셋(후반 50%)과 겹치지 않도록 0.5 이하여야 합니다"
 MODEL_PATH = _a.model_path
 SAVE_DIR = _a.save_dir
 EPOCHS = _a.epochs
@@ -31,7 +35,7 @@ MAX_LENGTH = _a.max_length
 # ===========================================================================
 
 print(f"=======================================================")
-print(f" Start 50% Forget Re-learning Fine-Tuning")
+print(f" Start {RELEARN_FRAC*100:.0f}% Forget Re-learning Fine-Tuning")
 print(f" Target Unlearned Model: {MODEL_PATH}")
 print(f" Save Directory       : {SAVE_DIR}")
 print(f" Epochs: {EPOCHS} | LR: {LEARNING_RATE} | Batch Size: {BATCH_SIZE}")
@@ -60,13 +64,14 @@ model = AutoModelForCausalLM.from_pretrained(
 print("\n[2/4] Loading TOFU Dataset and Splitting 50% Forget Data...")
 tofu_forget = list(load_dataset("locuslab/TOFU", "forget10")["train"])
 
-# 전체 Forget 샘플 400개 중 전반부 50%(200개)만 재학습용 데이터로 추출
-split_idx = len(tofu_forget) // 2
-train_forget_50 = tofu_forget[:split_idx]
+# 전체 Forget 샘플 400개 중 앞에서부터 RELEARN_FRAC 비율만 재학습용으로 사용.
+# 평가용 후반 50%(200개)는 어떤 비율이든 건드리지 않음 (eval_*.py와 동일한 split).
+n_train = int(len(tofu_forget) * RELEARN_FRAC)
+train_forget_50 = tofu_forget[:n_train]
 
 print(f" -> Total Forget Samples: {len(tofu_forget)}")
-print(f" -> Samples used for Re-learning (50%): {len(train_forget_50)}")
-print(f" -> Samples reserved for Testing (50%): {len(tofu_forget) - split_idx}")
+print(f" -> Samples used for Re-learning ({RELEARN_FRAC*100:.0f}%): {len(train_forget_50)}")
+print(f" -> Samples reserved for Testing (50%): {len(tofu_forget) - len(tofu_forget) // 2}")
 
 # 데이터 콜레이터 함수
 def collate_fn(batch):
@@ -118,4 +123,4 @@ print(f"\n[4/4] Saving Re-learned model checkpoint to: {SAVE_DIR} ...")
 model.save_pretrained(SAVE_DIR)
 tokenizer.save_pretrained(SAVE_DIR)
 
-print(f"\nSuccessfully completed 50% re-learning and saved model to '{SAVE_DIR}'!")
+print(f"\nSuccessfully completed {RELEARN_FRAC*100:.0f}% re-learning and saved model to '{SAVE_DIR}'!")

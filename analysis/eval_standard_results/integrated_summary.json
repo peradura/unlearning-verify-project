@@ -6,11 +6,12 @@
             "eval_timestamp": "2026-11-11 12:36:41",
             "metrics": {
                 "mia_accuracy": 0.575,
-                "mean_neuron_activation": 0.11414794921875,
+                "mean_neuron_activation": 0.0993804931640625,
                 "forget_ppl": 7.007901041617988,
                 "forget_log_prob": -1.9470382327607023,
                 "mmlu_accuracy": 0.412,
-                "gsm8k_accuracy": 0.21
+                "gsm8k_accuracy": 0.21,
+                "neuron_layer_idx": 5
             }
         },
         "2_retain_only": {
@@ -18,11 +19,12 @@
             "eval_timestamp": "2026-11-11 12:41:56",
             "metrics": {
                 "mia_accuracy": 0.41,
-                "mean_neuron_activation": 0.121319580078125,
+                "mean_neuron_activation": 0.10386962890625,
                 "forget_ppl": 14.855384477737875,
                 "forget_log_prob": -2.6983623906219036,
                 "mmlu_accuracy": 0.41,
-                "gsm8k_accuracy": 0.21
+                "gsm8k_accuracy": 0.21,
+                "neuron_layer_idx": 5
             }
         }
     }

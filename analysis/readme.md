@@ -51,4 +51,4 @@ python quantization.py --model_path <FP16 언러닝 모델> --save_dir ./checkpo
 python eval_unlearned.py --quantized --model_name 5_graddiff_quant_4bit --model_path ./checkpoints/5_graddiff_quant_4bit
 ```
 
-모델 번호 규칙: 1 base, 2 retain_only, 3/4/5 GradDiff(fp16/재학습/양자화), 6/7/8 AltPO, 9/10/11 NPO.
+모델 번호 규칙: 1 base, 2 retain_only, 3/4/5 GradDiff(fp16/재학습50%/양자화), 6/7/8 AltPO, 9/10/11 NPO, 12/13/14 GradDiff/AltPO/NPO 재학습 20% (`relearning.py --relearn_frac 0.2`).
